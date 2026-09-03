@@ -46,9 +46,8 @@ CONTACTS = """
 <b>🔹 Сайт:</b> <a href='https://ironbrak.samp.date'>ironbrak.samp.date</a>
 <b>🔹 Email:</b> ironbrakentertainment@gmail.com
 <b>🔹 Telegram-канал студии:</b> <a href='https://t.me/Ironbrakst'>@Ironbrakst</a>
-<b>🔹 Канал игры:</b> <a href='https://t.me/stayaliivve'>@stayaliivve</a>
 
-Также подписывайтесь на наши соцсети (скоро запустим)!
+Подписывайтесь на наши соцсети!
 """
 
 WELCOME = """
