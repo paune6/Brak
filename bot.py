@@ -13,7 +13,7 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
 def main_keyboard():
-    kb = ReplyKeyboardMarkup(
+    return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text='🏢 О студии'), KeyboardButton(text='🎮 Об игре')],
             [KeyboardButton(text='📥 Скачать игру'), KeyboardButton(text='📞 Контакты')],
@@ -21,7 +21,6 @@ def main_keyboard():
         ],
         resize_keyboard=True
     )
-    return kb
 
 def back_inline():
     return InlineKeyboardMarkup(
@@ -170,6 +169,7 @@ async def cmd_menu(message: types.Message):
         reply_markup=main_keyboard()
     )
 
+# Обработчики кнопок с точным совпадением текста (без лишних пробелов)
 @dp.message(F.text == '🔄 Главное меню')
 async def back_to_menu(message: types.Message):
     await cmd_menu(message)
@@ -194,19 +194,19 @@ async def contacts(message: types.Message):
 async def faq(message: types.Message):
     await message.answer(FAQ, parse_mode='HTML', reply_markup=back_inline())
 
+# Возврат в главное меню по инлайн-кнопке
 @dp.callback_query(F.data == 'main_menu')
 async def callback_main_menu(callback: types.CallbackQuery):
-    await callback.message.edit_text(
-        "<b>🔙 Главное меню</b>\n\nВыберите интересующий вас раздел:",
-        reply_markup=None,
-        parse_mode='HTML'
-    )
+    # Удаляем сообщение с инлайн-кнопками и показываем приветствие
+    await callback.message.delete()
     await callback.message.answer(
-        "Используйте кнопки под полем ввода.",
-        reply_markup=main_keyboard()
+        "<b>🔙 Главное меню</b>\n\nВыберите интересующий вас раздел:",
+        reply_markup=main_keyboard(),
+        parse_mode='HTML'
     )
     await callback.answer()
 
+# Обработка неизвестных сообщений
 @dp.message()
 async def handle_unknown(message: types.Message):
     await message.answer(
