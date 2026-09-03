@@ -149,9 +149,11 @@ HELP = """
 Если у вас остались вопросы, пишите нам в личные сообщения или на почту. Всегда рады помочь!
 """
 
+# ---------- Команды ----------
 @dp.message(Command('start'))
 async def cmd_start(message: types.Message):
     user_name = message.from_user.first_name or "друг"
+    logging.info(f"Получена команда /start от {user_name}")
     await message.answer(
         f"<b>Привет, {user_name}!</b>\n\n" + WELCOME,
         reply_markup=main_keyboard(),
@@ -160,61 +162,76 @@ async def cmd_start(message: types.Message):
 
 @dp.message(Command('help'))
 async def cmd_help(message: types.Message):
+    logging.info("Получена команда /help")
     await message.answer(HELP, parse_mode='HTML', reply_markup=main_keyboard())
 
 @dp.message(Command('menu'))
 async def cmd_menu(message: types.Message):
+    logging.info("Получена команда /menu")
     await message.answer(
         "🔙 Вы вернулись в главное меню.",
         reply_markup=main_keyboard()
     )
 
-# Обработчики кнопок с точным совпадением текста (без лишних пробелов)
-@dp.message(F.text == '🔄 Главное меню')
+# ---------- Обработчики Reply-кнопок (с приведением к нижнему регистру) ----------
+@dp.message(F.text.lower() == '🔄 главное меню'.lower())
 async def back_to_menu(message: types.Message):
+    logging.info(f"Нажата кнопка 'Главное меню' от {message.from_user.id}")
     await cmd_menu(message)
 
-@dp.message(F.text == '🏢 О студии')
+@dp.message(F.text.lower() == '🏢 о студии'.lower())
 async def about_studio(message: types.Message):
+    logging.info(f"Нажата кнопка 'О студии' от {message.from_user.id}")
     await message.answer(ABOUT_STUDIO, parse_mode='HTML', reply_markup=back_inline())
 
-@dp.message(F.text == '🎮 Об игре')
+@dp.message(F.text.lower() == '🎮 об игре'.lower())
 async def about_game(message: types.Message):
+    logging.info(f"Нажата кнопка 'Об игре' от {message.from_user.id}")
     await message.answer(ABOUT_GAME, parse_mode='HTML', reply_markup=back_inline())
 
-@dp.message(F.text == '📥 Скачать игру')
+@dp.message(F.text.lower() == '📥 скачать игру'.lower())
 async def download_game(message: types.Message):
+    logging.info(f"Нажата кнопка 'Скачать игру' от {message.from_user.id}")
     await message.answer(DOWNLOAD, parse_mode='HTML', reply_markup=download_inline())
 
-@dp.message(F.text == '📞 Контакты')
+@dp.message(F.text.lower() == '📞 контакты'.lower())
 async def contacts(message: types.Message):
+    logging.info(f"Нажата кнопка 'Контакты' от {message.from_user.id}")
     await message.answer(CONTACTS, parse_mode='HTML', reply_markup=contacts_inline(), disable_web_page_preview=True)
 
-@dp.message(F.text == '❓ FAQ')
+@dp.message(F.text.lower() == '❓ faq'.lower())
 async def faq(message: types.Message):
+    logging.info(f"Нажата кнопка 'FAQ' от {message.from_user.id}")
     await message.answer(FAQ, parse_mode='HTML', reply_markup=back_inline())
 
-# Возврат в главное меню по инлайн-кнопке
+# ---------- Обработчик инлайн-кнопки "Назад в меню" ----------
 @dp.callback_query(F.data == 'main_menu')
 async def callback_main_menu(callback: types.CallbackQuery):
-    # Удаляем сообщение с инлайн-кнопками и показываем приветствие
-    await callback.message.delete()
-    await callback.message.answer(
+    logging.info(f"Нажата инлайн-кнопка 'Назад в меню' от {callback.from_user.id}")
+    # Редактируем текущее сообщение (убираем инлайн-кнопки)
+    await callback.message.edit_text(
         "<b>🔙 Главное меню</b>\n\nВыберите интересующий вас раздел:",
-        reply_markup=main_keyboard(),
+        reply_markup=None,
         parse_mode='HTML'
+    )
+    # Отправляем новое сообщение с reply-клавиатурой (она появится под полем ввода)
+    await callback.message.answer(
+        "Используйте кнопки под полем ввода.",
+        reply_markup=main_keyboard()
     )
     await callback.answer()
 
-# Обработка неизвестных сообщений
+# ---------- Обработка неизвестных сообщений ----------
 @dp.message()
 async def handle_unknown(message: types.Message):
+    logging.info(f"Неизвестное сообщение от {message.from_user.id}: {message.text}")
     await message.answer(
         "😕 Извините, я не понимаю этот запрос.\n"
         "Пожалуйста, воспользуйтесь кнопками меню.",
         reply_markup=main_keyboard()
     )
 
+# ---------- Запуск ----------
 async def main():
     logging.info("Бот запущен")
     await dp.start_polling(bot)
