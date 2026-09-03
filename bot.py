@@ -13,11 +13,12 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
 def main_keyboard():
+    # Убрали кнопку "Контакты"
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text='🏢 О студии'), KeyboardButton(text='🎮 Об игре')],
-            [KeyboardButton(text='📥 Скачать игру'), KeyboardButton(text='📞 Контакты')],
-            [KeyboardButton(text='❓ FAQ'), KeyboardButton(text='🔄 Главное меню')]
+            [KeyboardButton(text='📥 Скачать игру'), KeyboardButton(text='❓ FAQ')],
+            [KeyboardButton(text='🔄 Главное меню')]
         ],
         resize_keyboard=True
     )
@@ -36,16 +37,19 @@ def download_inline():
         ]
     )
 
-def contacts_inline():
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text='🌐 Сайт', url='https://ironbrak.samp.date')],
-            [InlineKeyboardButton(text='📢 Канал студии', url='https://t.me/Ironbrakst')],
-            [InlineKeyboardButton(text='🎮 Канал игры', url='https://t.me/stayaliivve')],
-            [InlineKeyboardButton(text='📧 Написать нам', url='mailto:ironbrakentertainment@gmail.com')],
-            [InlineKeyboardButton(text='◀️ Назад в меню', callback_data='main_menu')]
-        ]
-    )
+# Текст контактов теперь встроен в приветствие
+CONTACTS = """
+<b>📬 Наши контакты</b>
+
+Мы всегда открыты для общения! Пишите нам по любым вопросам — от предложений по игре до сотрудничества.
+
+<b>🔹 Сайт:</b> <a href='https://ironbrak.samp.date'>ironbrak.samp.date</a>
+<b>🔹 Email:</b> ironbrakentertainment@gmail.com
+<b>🔹 Telegram-канал студии:</b> <a href='https://t.me/Ironbrakst'>@Ironbrakst</a>
+<b>🔹 Канал игры:</b> <a href='https://t.me/stayaliivve'>@stayaliivve</a>
+
+Также подписывайтесь на наши соцсети (скоро запустим)!
+"""
 
 WELCOME = """
 <b>👋 Добро пожаловать в официального бота игровой студии <i>Iron Brak</i>!</b>
@@ -57,6 +61,8 @@ WELCOME = """
 • Покажет, где скачать наш проект
 • Даст ответы на частые вопросы
 • Предоставит контакты для связи
+
+""" + CONTACTS + """
 
 Выберите нужный раздел в меню ниже ⬇️
 """
@@ -104,19 +110,6 @@ DOWNLOAD = """
 Выберите удобный вариант 👇
 """
 
-CONTACTS = """
-<b>📬 Наши контакты</b>
-
-Мы всегда открыты для общения! Пишите нам по любым вопросам — от предложений по игре до сотрудничества.
-
-<b>🔹 Сайт:</b> <a href='https://ironbrak.samp.date'>ironbrak.samp.date</a>
-<b>🔹 Email:</b> ironbrakentertainment@gmail.com
-<b>🔹 Telegram-канал студии:</b> <a href='https://t.me/Ironbrakst'>@Ironbrakst</a>
-<b>🔹 Канал игры:</b> <a href='https://t.me/stayaliivve'>@stayaliivve</a>
-
-Также подписывайтесь на наши соцсети (скоро запустим)!
-"""
-
 FAQ = """
 <b>❓ Часто задаваемые вопросы</b>
 
@@ -143,13 +136,11 @@ HELP = """
 • <b>🏢 О студии</b> — история и философия Iron Brak
 • <b>🎮 Об игре</b> — подробности о "Stay Alive"
 • <b>📥 Скачать игру</b> — ссылка на канал с игрой
-• <b>📞 Контакты</b> — все способы связи с нами
 • <b>❓ FAQ</b> — ответы на популярные вопросы
 
 Если у вас остались вопросы, пишите нам в личные сообщения или на почту. Всегда рады помочь!
 """
 
-# ---------- Команды ----------
 @dp.message(Command('start'))
 async def cmd_start(message: types.Message):
     user_name = message.from_user.first_name or "друг"
@@ -157,7 +148,8 @@ async def cmd_start(message: types.Message):
     await message.answer(
         f"<b>Привет, {user_name}!</b>\n\n" + WELCOME,
         reply_markup=main_keyboard(),
-        parse_mode='HTML'
+        parse_mode='HTML',
+        disable_web_page_preview=True  # чтобы ссылки не разворачивались
     )
 
 @dp.message(Command('help'))
@@ -173,7 +165,6 @@ async def cmd_menu(message: types.Message):
         reply_markup=main_keyboard()
     )
 
-# ---------- Обработчики Reply-кнопок (с приведением к нижнему регистру) ----------
 @dp.message(F.text.lower() == '🔄 главное меню'.lower())
 async def back_to_menu(message: types.Message):
     logging.info(f"Нажата кнопка 'Главное меню' от {message.from_user.id}")
@@ -194,34 +185,25 @@ async def download_game(message: types.Message):
     logging.info(f"Нажата кнопка 'Скачать игру' от {message.from_user.id}")
     await message.answer(DOWNLOAD, parse_mode='HTML', reply_markup=download_inline())
 
-@dp.message(F.text.lower() == '📞 контакты'.lower())
-async def contacts(message: types.Message):
-    logging.info(f"Нажата кнопка 'Контакты' от {message.from_user.id}")
-    await message.answer(CONTACTS, parse_mode='HTML', reply_markup=contacts_inline(), disable_web_page_preview=True)
-
 @dp.message(F.text.lower() == '❓ faq'.lower())
 async def faq(message: types.Message):
     logging.info(f"Нажата кнопка 'FAQ' от {message.from_user.id}")
     await message.answer(FAQ, parse_mode='HTML', reply_markup=back_inline())
 
-# ---------- Обработчик инлайн-кнопки "Назад в меню" ----------
 @dp.callback_query(F.data == 'main_menu')
 async def callback_main_menu(callback: types.CallbackQuery):
     logging.info(f"Нажата инлайн-кнопка 'Назад в меню' от {callback.from_user.id}")
-    # Редактируем текущее сообщение (убираем инлайн-кнопки)
     await callback.message.edit_text(
         "<b>🔙 Главное меню</b>\n\nВыберите интересующий вас раздел:",
         reply_markup=None,
         parse_mode='HTML'
     )
-    # Отправляем новое сообщение с reply-клавиатурой (она появится под полем ввода)
     await callback.message.answer(
         "Используйте кнопки под полем ввода.",
         reply_markup=main_keyboard()
     )
     await callback.answer()
 
-# ---------- Обработка неизвестных сообщений ----------
 @dp.message()
 async def handle_unknown(message: types.Message):
     logging.info(f"Неизвестное сообщение от {message.from_user.id}: {message.text}")
@@ -231,7 +213,6 @@ async def handle_unknown(message: types.Message):
         reply_markup=main_keyboard()
     )
 
-# ---------- Запуск ----------
 async def main():
     logging.info("Бот запущен")
     await dp.start_polling(bot)
